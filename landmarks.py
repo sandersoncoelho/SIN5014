@@ -1,7 +1,12 @@
+import json
+import math
+import os
+
 import cv2
 import numpy as np
 
 import config
+from utils import getFilenames
 
 
 def getLandmarks(input_image):
@@ -129,3 +134,26 @@ def saveLandmarks(landmarks, filename):
   path = filename.replace(config.DATASET_PATH, config.OUT_PATH + '/landmarks')
   path = path.replace('.' + config.DATASET_IN_EXTENSION, '')
   np.save(path, landmarks)
+
+def getLandmarksFromNpy():
+  filenames = getFilenames(config.ANNOTATION_PATH, config.NPY_EXTENSION)
+  print(filenames)
+
+def getLandmarksFromAnnotation(annotationFile, countLandmarks):
+  annotations = json.load(open(os.path.join('./', annotationFile)))
+  image_metadata = annotations['_via_img_metadata']
+  image_id_list =  annotations['_via_image_id_list']
+
+  landmarks = []
+
+  for keyFilename in image_id_list:
+    regions = image_metadata[keyFilename]['regions']
+
+    for i in range(countLandmarks):
+      point = regions[i]['shape_attributes']
+      p = [point['cx'], point['cy']]
+      landmarks.append(p)
+
+  # landmarks.append()
+
+  return landmarks

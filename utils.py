@@ -10,14 +10,14 @@ def showImage(title, image):
   cv2.waitKey(0)
   cv2.destroyAllWindows()
 
-def getFilenames():
+def getFilenames(directory, extension):
   filenames = []
-  dataset = glob.glob(config.DATASET_PATH)
-  extension = "/*." + config.DATASET_IN_EXTENSION
+  _directory = glob.glob(directory)
+  _extension = "/*." + extension
 
-  for index in range(len(dataset)):
-    if glob.glob(dataset[index] + extension) != []:
-      filenames.append(glob.glob(dataset[index] + extension))
+  for index in range(len(_directory)):
+    if glob.glob(_directory[index] + _extension) != []:
+      filenames.append(glob.glob(_directory[index] + _extension))
 
   return filenames[0]
 
@@ -30,7 +30,7 @@ def loadImages(filenames):
 
   return images
 
-def saveImageOut(image, filename):
-    path = filename.replace(config.DATASET_PATH, config.OUT_PATH + '/images')
+def saveImageOut(image, filename, filenamePrefix):
+    path = filename.replace(config.DATASET_PATH, config.OUT_PATH + '/images/' + filenamePrefix)
     path = path.replace(config.DATASET_IN_EXTENSION, config.DATASET_OUT_EXTENSION)
     cv2.imwrite(path, image)

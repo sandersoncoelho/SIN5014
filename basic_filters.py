@@ -108,19 +108,22 @@ def cutImage(img):
 def applyFilters(image):
   kernel9 = np.ones((9,9), np.uint8)
 
-  _image = diminuirImagem(image)
-  _image = cv2.cvtColor(_image, cv2.COLOR_BGR2GRAY)
-  _image = cv2.medianBlur(_image, 5)
-  _image = cv2.bilateralFilter(_image, 5, 150, 150)
-  _image = dog(_image)
-  _image = remove(_image,90)
-  _image = cv2.dilate(_image, kernel9, iterations=1)
-  _image=cv2.erode(_image,kernel9,iterations=1)
-  _image=removeWings(_image,kernel9)
+  filteredImage = diminuirImagem(image)
+  originalImage = diminuirImagem(image)
 
-  xx,ww,hh,yy = cutImage(_image) 
-  _image = _image[xx:yy, ww:hh]
+  filteredImage = cv2.cvtColor(filteredImage, cv2.COLOR_BGR2GRAY)
+  filteredImage = cv2.medianBlur(filteredImage, 5)
+  filteredImage = cv2.bilateralFilter(filteredImage, 5, 150, 150)
+  filteredImage = dog(filteredImage)
+  filteredImage = remove(filteredImage,90)
+  filteredImage = cv2.dilate(filteredImage, kernel9, iterations=1)
+  filteredImage=cv2.erode(filteredImage,kernel9,iterations=1)
+  filteredImage=removeWings(filteredImage,kernel9)
 
-  _image = cv2.ximgproc.thinning(_image,thinningType=cv2.ximgproc.THINNING_ZHANGSUEN)
+  xx,ww,hh,yy = cutImage(filteredImage) 
+  filteredImage = filteredImage[xx:yy, ww:hh]
+  originalImage = originalImage[xx:yy, ww:hh]
+
+  filteredImage = cv2.ximgproc.thinning(filteredImage,thinningType=cv2.ximgproc.THINNING_ZHANGSUEN)
   
-  return _image
+  return filteredImage, originalImage

@@ -22,32 +22,66 @@ def main():
   kernel9 = np.ones((9,9), np.uint8)
 
   # Reading the image from the present directory
-  image = cv2.imread("./dataset/m141e diploide.jpg")
-  image = bf.diminuirImagem(image)
-  grayImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+  # image = cv2.imread("./dataset/m27e diploide.jpg")
+  # image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+  # image = bf.diminuirImagem(image)
+  # showImage('gray image', image)
+
+  #landmark1
+  # image = cv2.imread("./landmark1.png")
+  # image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+  # showImage('gray image', image)
+  # _, image = cv2.threshold(image,40, 255, cv2.THRESH_BINARY_INV)
+  # showImage('gray image', image)
+  # image = cv2.medianBlur(image, 5)
+  # showImage('gray image', image)
+
+  #landmark10
+  image = cv2.imread("./landmark10.png")
+  image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+  showImage('gray image', image)
+  _, image = cv2.threshold(image,130, 255, cv2.THRESH_BINARY_INV)
+  showImage('gray image', image)
+  image = cv2.medianBlur(image, 7)
+  showImage('gray image', image)
+
   
   # The declaration of CLAHE
   # clipLimit -> Threshold for contrast limiting
-  clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(50,50))
-  clahe_img = clahe.apply(grayImage)
-  showImage("CLAHE image", clahe_img)
+  # clahe = cv2.createCLAHE(clipLimit=100, tileGridSize=(10,10))
+  # image = clahe.apply(image)
+  # showImage("CLAHE image", image)
+
+
+  # kernel9 = np.ones((9,9), np.uint8)
+  # image = bf.diminuirImagem(image)
+  
+  # filteredImage = cv2.bilateralFilter(filteredImage, 5, 150, 150)
+  # filteredImage = bf.dog(filteredImage)
+  # filteredImage = bf.remove(filteredImage,90)
+  # filteredImage = cv2.dilate(filteredImage, kernel9, iterations=1)
+  # filteredImage=cv2.erode(filteredImage,kernel9,iterations=1)
+  # filteredImage=bf.removeWings(filteredImage,kernel9)
+
+  # xx,ww,hh,yy = bf.cutImage(filteredImage) 
+  # filteredImage = filteredImage[xx:yy, ww:hh]
 
 
   # image = cv2.medianBlur(clahe_img, 9)
   # image = cv2.bilateralFilter(image, 5, 150, 150)
-  # image = bf.dog(image)
+  # image = bf.dog(clahe_img)
   # image = bf.remove(image,90)
   # image = cv2.dilate(image, kernel9, iterations=1)
   # image=cv2.erode(image,kernel9,iterations=1)
   # image=bf.removeWings(image,kernel9)
   # xx,ww,hh,yy = bf.cutImage(image) 
   # image = image[xx:yy, ww:hh]
-  # image = cv2.ximgproc.thinning(image,thinningType=cv2.ximgproc.THINNING_ZHANGSUEN)
+  image = cv2.ximgproc.thinning(image,thinningType=cv2.ximgproc.THINNING_ZHANGSUEN)
+  showImage("image final", image)
   
-  _, image = cv2.threshold(clahe_img, 160, 255, cv2.THRESH_BINARY_INV)
 
-  image = cv2.GaussianBlur(image, (1, 1), 5)
-  image = bf.remove(image,90)
+  # image = cv2.GaussianBlur(image, (1, 1), 5)
+  # image = bf.remove(image,90)
 
   # image = bf.dog(image)
 
@@ -56,7 +90,7 @@ def main():
   # Showing the two images
   # cv2.imshow("ordinary threshold", ordinary_img)
   
-  showImage("image final", image)
+  
       
   # showImage("thresh image", thresh_img)
 
