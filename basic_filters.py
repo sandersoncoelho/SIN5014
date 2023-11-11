@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+import utils
+
 
 def dog(img):
   """Metodo de binarizacao chamado difference of gaussians"""
@@ -110,20 +112,29 @@ def applyFilters(image):
 
   filteredImage = diminuirImagem(image)
   originalImage = diminuirImagem(image)
+  utils.showImage('image original', originalImage)
 
   filteredImage = cv2.cvtColor(filteredImage, cv2.COLOR_BGR2GRAY)
+  utils.showImage('escala de cinza', filteredImage)
   filteredImage = cv2.medianBlur(filteredImage, 5)
+  utils.showImage('filtro de media', filteredImage)
   filteredImage = cv2.bilateralFilter(filteredImage, 5, 150, 150)
   filteredImage = dog(filteredImage)
+  utils.showImage('filtro de Gaussian', filteredImage)
   filteredImage = remove(filteredImage,90)
+  utils.showImage('remocao de ruidos', filteredImage)
   filteredImage = cv2.dilate(filteredImage, kernel9, iterations=1)
+  utils.showImage('dilatacao', filteredImage)
   filteredImage=cv2.erode(filteredImage,kernel9,iterations=1)
+  utils.showImage('erosao', filteredImage)
   filteredImage=removeWings(filteredImage,kernel9)
 
   xx,ww,hh,yy = cutImage(filteredImage) 
   filteredImage = filteredImage[xx:yy, ww:hh]
   originalImage = originalImage[xx:yy, ww:hh]
+  utils.showImage('bounding box', filteredImage)
 
   filteredImage = cv2.ximgproc.thinning(filteredImage,thinningType=cv2.ximgproc.THINNING_ZHANGSUEN)
+  utils.showImage('esqueletizacao', filteredImage)
   
   return filteredImage, originalImage

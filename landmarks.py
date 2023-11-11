@@ -135,25 +135,22 @@ def saveLandmarks(landmarks, filename):
   path = path.replace('.' + config.DATASET_IN_EXTENSION, '')
   np.save(path, landmarks)
 
-def getLandmarksFromNpy():
-  filenames = getFilenames(config.ANNOTATION_PATH, config.NPY_EXTENSION)
-  print(filenames)
-
-def getLandmarksFromAnnotation(annotationFile, countLandmarks):
+def getLandmarksFromAnnotation(annotationFile):
   annotations = json.load(open(os.path.join('./', annotationFile)))
   image_metadata = annotations['_via_img_metadata']
   image_id_list =  annotations['_via_image_id_list']
+  image_id_list.sort()
 
-  landmarks = []
-
+  allLandmarks = []
   for keyFilename in image_id_list:
     regions = image_metadata[keyFilename]['regions']
 
-    for i in range(countLandmarks):
+    instanceLandmarks = []
+    for i in range(len(regions)):
       point = regions[i]['shape_attributes']
       p = [point['cx'], point['cy']]
-      landmarks.append(p)
+      instanceLandmarks.append(p)
 
-  # landmarks.append()
+    allLandmarks.append(instanceLandmarks)
 
-  return landmarks
+  return allLandmarks
