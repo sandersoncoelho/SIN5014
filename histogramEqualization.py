@@ -3,7 +3,7 @@ import numpy as np
 from skimage import exposure
 
 import utils
-from basic_filters import diminuirImagem, dog, remove
+from basic_filters import differenceOfGassians, diminuirImagem, remove
 
 # Equalization
 # img_eq = exposure.equalize_hist(img)

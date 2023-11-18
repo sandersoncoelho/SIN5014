@@ -1,6 +1,6 @@
 DATASET_PATH = './dataset'
 
-OUT_PATH = './out_test'
+OUT_PATH = './out_asdf'
 
 ANNOTATION_PATH = './annotation'
 

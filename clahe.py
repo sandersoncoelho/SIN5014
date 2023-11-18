@@ -37,19 +37,22 @@ def main():
   # showImage('gray image', image)
 
   #landmark10
-  image = cv2.imread("./landmark10.png")
+  image = cv2.imread("./AT-wing-images/AT-0001-031-003678-L.dw.png")
   image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+  image = cv2.medianBlur(image, 1)
   showImage('gray image', image)
   _, image = cv2.threshold(image,130, 255, cv2.THRESH_BINARY_INV)
+  image = bf.remove(image,90)
+  image = cv2.medianBlur(image, 5)
   showImage('gray image', image)
-  image = cv2.medianBlur(image, 7)
-  showImage('gray image', image)
+  
 
   
   # The declaration of CLAHE
   # clipLimit -> Threshold for contrast limiting
-  # clahe = cv2.createCLAHE(clipLimit=100, tileGridSize=(10,10))
-  # image = clahe.apply(image)
+  # clahe = cv2.createCLAHE(clipLimit=5)
+  # image = clahe.apply(image) + 30
+  # _, image = cv2.threshold(image, 155, 255, cv2.THRESH_BINARY_INV)
   # showImage("CLAHE image", image)
 
 

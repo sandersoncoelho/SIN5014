@@ -3,7 +3,7 @@ import sys
 import config
 from basic_filters import applyFilters
 from landmarks import locateLandmarks, saveLandmarks
-from utils import getFilenames, loadImages, saveImageOut
+from utils import getFilenames, loadImages, saveImageOut, showImage
 
 
 def main():
@@ -21,6 +21,7 @@ def main():
         
         filteredImage, originalImage = applyFilters(images[index])
         filteredImage, landmarks = locateLandmarks(filteredImage)
+        # showImage('teste', filteredImage)
 
         saveImageOut(filteredImage, filenames[index], 'filtered')
         saveImageOut(originalImage, filenames[index], 'original')
