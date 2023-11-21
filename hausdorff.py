@@ -1,3 +1,4 @@
+import itertools
 import math
 
 import cv2
@@ -12,15 +13,35 @@ from utils import getFilenames, showImage
 
 PROXIMITY_MEASURE = 22
 MIN_LANDMARKS_ACCEPTED = 8
+MERGE_MEASURE = 10
 
-def getModifiedHausdorffDistance(img1, img2):    
-  a=distance.cdist(img1,img2,'euclidean').min(axis=0)
-  a= np.mean(a)
+def getModifiedHausdorffDistance(arrayA, arrayB):    
+  a = distance.cdist(arrayA, arrayB, 'euclidean').min(axis = 0)
+  a = np.mean(a)
 
-  b=distance.cdist(img2,img1,'euclidean').min(axis=0)
-  b= np.mean(b)
+  b = distance.cdist(arrayB, arrayA, 'euclidean').min(axis = 0)
+  b = np.mean(b)
   
-  return round((a+b)/2,5)
+  return max(a, b)
+
+def mergeLandmarksClose(landmarksNpy):
+  result = []
+  pointsToBeRemoved = []
+
+  combinations = list(itertools.combinations(landmarksNpy, 2))
+
+  for pointA, pointB in combinations:
+    if math.dist(pointA, pointB) < MERGE_MEASURE:
+      mergedPoint = [int((pointA[0] + pointB[0])/2), int((pointA[1] + pointB[1]) / 2)]
+      result.append(mergedPoint)
+      pointsToBeRemoved.append(pointA)
+      pointsToBeRemoved.append(pointB)
+
+  for point in landmarksNpy:
+    if point not in pointsToBeRemoved:
+      result.append(point)
+
+  return result
 
 def isPointsClose(center, point, radius):
   return pow(point[0] - center[0], 2) + pow(point[1] - center[1], 2) < pow(radius, 2)
@@ -121,7 +142,7 @@ def main():
   plotHausdorff(hausdorffDistances)
   plotExpectedsAndFoundout(expected, foundout)
 
-main()
+# main()
 import json
 import os
 
@@ -140,77 +161,34 @@ def getLandmarksAnn():
 
   return instanceLandmarks
 
-import numpy as np
 
-
-def ModHausdorffDist(A,B):
-    #This function computes the Modified Hausdorff Distance (MHD) which is
-    #proven to function better than the directed HD as per Dubuisson et al.
-    #in the following work:
-    #
-    #M. P. Dubuisson and A. K. Jain. A Modified Hausdorff distance for object
-    #matching. In ICPR94, pages A:566-568, Jerusalem, Israel, 1994.
-    #http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=576361
-    #
-    #The function computed the forward and reverse distances and outputs the
-    #maximum/minimum of both.
-    #Optionally, the function can return forward and reverse distance.
-    #
-    #Format for calling function:
-    #
-    #[MHD,FHD,RHD] = ModHausdorffDist(A,B);
-    #
-    #where
-    #MHD = Modified Hausdorff Distance.
-    #FHD = Forward Hausdorff Distance: minimum distance from all points of B
-    #      to a point in A, averaged for all A
-    #RHD = Reverse Hausdorff Distance: minimum distance from all points of A
-    #      to a point in B, averaged for all B
-    #A -> Point set 1, [row as observations, and col as dimensions]
-    #B -> Point set 2, [row as observations, and col as dimensions]
-    #
-    #No. of samples of each point set may be different but the dimension of
-    #the points must be the same.
-    #
-    #Edward DongBo Cui Stanford University; 06/17/2014
-
-    # Find pairwise distance
-    D_mat = np.sqrt(inner1d(A,A)[np.newaxis].T + inner1d(B,B)-2*(np.dot(A,B.T)))
-    # Calculating the forward HD: mean(min(each col))
-    FHD = np.mean(np.min(D_mat,axis=1))
-    # Calculating the reverse HD: mean(min(each row))
-    RHD = np.mean(np.min(D_mat,axis=0))
-    # Calculating mhd
-    MHD = np.max(np.array([FHD, RHD]))
-    return(MHD, FHD, RHD)
 
 
 def teste():
-  landmarksAnn = getLandmarksAnn()
+  landmarksAnn = np.array(getLandmarksAnn())
   print("landmarksAnn: ", landmarksAnn)
 
   filenameNpy = "./out_test/landmarks/m1d haploide.npy"
   landmarksNpy = np.load(filenameNpy, allow_pickle=True).tolist()
   print("landmarksNpy: ", landmarksNpy)
+  landmarksNpy = mergeLandmarksClose(landmarksNpy)
 
   height, width = 254, 744
   image = np.zeros(height * width * 3).reshape(height, width, 3)
-  # image = cv2.cvtColor(image,cv2.COLOR_GRAY2RGB)
 
   for landmark in landmarksAnn:
     image = cv2.circle(image, (landmark[0], landmark[1]), 5, (0, 255, 0), -1)
 
+  firstColumn = landmarksAnn[:, 0]
+  xMin, xMax = min(firstColumn), max(firstColumn)
+  landmarksNpyResult = []
   for landmark in landmarksNpy:
-    image = cv2.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 255), -1)
+    if xMin <= landmark[0] and landmark[0] <= xMax:
+      image = cv2.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 255), -1)
+      landmarksNpyResult.append(landmark)
 
-  print("MDH:", getModifiedHausdorffDistance(landmarksAnn, landmarksNpy))
-
-  # set1 = np.array([[1, 2], [3, 4], [5, 6]])
-  # set2 = np.array([[2, 3], [4, 5], [6, 3]])
-  distance = ModHausdorffDist(np.array(landmarksAnn), np.array(landmarksNpy))
-  # distance = modified_hausdorff_distance(np.array(landmarksAnn), np.array(landmarksNpy)))
-  print(f"A distância modificada de Hausdorff entre os conjuntos é: {distance}")
+  print("MDH:", getModifiedHausdorffDistance(landmarksAnn, landmarksNpyResult))
 
   showImage('teste', image)
 
-# teste()
+teste()

@@ -3,6 +3,7 @@ import sys
 import cv2
 import numpy as np
 
+from landmarks import locateLandmarks, saveLandmarks
 from utils import getFilenames, loadImages, saveImageOut, showImage
 
 
@@ -120,43 +121,90 @@ def remove(img, Min):
       img[output == i + 1] = 255
   return img
 
+def removeStubs(image):
+  kernel1 = np.array((
+    [0, 0, 0],
+    [0, 1, 0],
+    [0, 1, 0]), dtype="int")
+  kernel2 = np.array((
+    [0, 0, 0],
+    [0, 1, 0],
+    [1, 0, 0]), dtype="int")
+  kernel3 = np.array((
+    [0, 0, 0],
+    [1, 1, 0],
+    [0, 0, 0]), dtype="int")
+  kernel4 = np.array((
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 0]), dtype="int")
+  kernel5 = np.array((
+    [0, 1, 0],
+    [0, 1, 0],
+    [0, 0, 0]), dtype="int")
+  kernel6 = np.array((
+    [0, 0, 1],
+    [0, 1, 0],
+    [0, 0, 0]), dtype="int")
+  kernel7 = np.array((
+    [0, 0, 0],
+    [0, 1, 1],
+    [0, 0, 0]), dtype="int")
+  kernel8 = np.array((
+    [0, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]), dtype="int")
+  
+  # output_image1 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel1)
+  # output_image2 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel2)
+  # output_image3 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel3)
+  # output_image4 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel4)
+  # output_image5 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel5)
+  # output_image6 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel6)
+  # output_image7 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel7)
+  # output_image8 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel8)
+
+  # output_image2 = cv2.bitwise_not(output_image1, output_image2)
+  output_image3 = cv2.bitwise_or(image, output_image3)
+  showImage("teste3", output_image3)
+  # output_image5 = cv2.bitwise_not(output_image4, output_image5)
+  # output_image7 = cv2.bitwise_not(output_image6, output_image7)
+  # output_image = cv2.bitwise_not(output_image7, output_image8)
+  return image
+
 def applyFilters(image):
-  originalImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-  filteredImage = diminuirImagem(originalImage)
-  originalImage = diminuirImagem(originalImage)
-
-  _,filteredImage = cv2.threshold(filteredImage,180,255,cv2.THRESH_BINARY_INV)
-  filteredImage = remove(filteredImage, 30000)
-  showImage('filteredImage', filteredImage)
-
-  xx,ww,hh,yy = cutImage(filteredImage) 
-  filteredImage = filteredImage[xx:yy, ww:hh]
-  originalImage = originalImage[xx:yy, ww:hh]
-  showImage('bounding box', originalImage)
-
-  height, width = filteredImage.shape
-  for x in range(height):
-    for y in range(width):
-      if filteredImage[x][y] == 0:
-        originalImage[x][y] = 255
-    
-  showImage('bounding box', originalImage)
-  filteredImage = differenceOfGassians(originalImage)
-  filteredImage = remove(filteredImage, 100)
-
   kernel9 = np.ones((3,3), np.uint8)
-  filteredImage = cv2.dilate(filteredImage, kernel9, iterations=1)
-  filteredImage=cv2.erode(filteredImage,kernel9,iterations=2)
-  filteredImage = cv2.dilate(filteredImage, kernel9, iterations=2)
-  filteredImage=cv2.erode(filteredImage,kernel9,iterations=2)
-  # filteredImage = cv2.dilate(filteredImage, kernel9, iterations=4)
-  filteredImage = remove(filteredImage, 200)
-  showImage('filteredImage', filteredImage)
 
-  # sobel_horizontal = cv2.Sobel(filteredImage, cv2.CV_64F, 1, 0, ksize=5)
-  # sobel_vertical = cv2.Sobel(filteredImage, cv2.CV_64F, 0, 1, ksize=5)
-  # showImage('horizontal', sobel_horizontal)
-  # showImage('sobel_vertical', sobel_vertical)
+  # filteredImage = diminuirImagem(image)
+  # originalImage = diminuirImagem(image)
+  # utils.showImage('image original', originalImage)
+
+  filteredImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+  # showImage('escala de cinza', filteredImage)
+  filteredImage = cv2.medianBlur(filteredImage, 5)
+  # showImage('filtro de media', filteredImage)
+  filteredImage = cv2.bilateralFilter(filteredImage, 5, 150, 150)
+  filteredImage = differenceOfGassians(filteredImage)
+  # showImage('filtro de Gaussian', filteredImage)
+  filteredImage = remove(filteredImage,90)
+  # showImage('remocao de ruidos', filteredImage)
+  filteredImage = cv2.dilate(filteredImage, kernel9, iterations=1)
+  # showImage('dilatacao', filteredImage)
+  filteredImage=cv2.erode(filteredImage,kernel9,iterations=1)
+  # showImage('erosao', filteredImage)
+  # filteredImage=removeWings(filteredImage,kernel9)
+
+  # xx,ww,hh,yy = cutImage(filteredImage) 
+  # filteredImage = filteredImage[xx:yy, ww:hh]
+  # originalImage = originalImage[xx:yy, ww:hh]
+
+  filteredImage = cv2.ximgproc.thinning(filteredImage,thinningType=cv2.ximgproc.THINNING_ZHANGSUEN)
+  # showImage('esqueletizacao', filteredImage)
+
+  filteredImage = remove(filteredImage,150)
+  # showImage('remocao de ruidos', filteredImage)
+  # filteredImage = removeStubs(filteredImage)
+  return filteredImage
 
 def main():
     n = len(sys.argv)
@@ -164,15 +212,15 @@ def main():
     if n == 2:
         filenames = [ sys.argv[1] ]
     else:
-        return
+        filenames = getFilenames("./AT-wing-images", "png")
     
     images = loadImages(filenames)
 
     for index in range(0, len(images)):
         print('Processing ', filenames[index])
         
-        applyFilters(images[index])
+        filteredImage = applyFilters(images[index])
         # filteredImage, landmarks = locateLandmarks(filteredImage)
-        # showImage('teste', filteredImage)
+        showImage('teste', filteredImage)
 
 main()

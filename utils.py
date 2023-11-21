@@ -1,11 +1,15 @@
 import glob
 
 import cv2
+from matplotlib import pyplot as plt
 
 import config
 
 
 def showImage(title, image):
+  # plt.title(title)
+  # plt.imshow(image)
+  # plt.show()
   cv2.imshow(title, image)
   cv2.waitKey(0)
   cv2.destroyAllWindows()
