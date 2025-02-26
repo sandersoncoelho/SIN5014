@@ -3,8 +3,9 @@ import sys
 import cv2
 import numpy as np
 
-from landmarks import locateLandmarks, saveLandmarks
-from utils import getFilenames, loadImages, saveImageOut, showImage
+import config
+from landmarks import locateLandmarks
+from utils import getFilenames, loadImages, showImage
 
 
 def diminuirImagem(img):
@@ -106,6 +107,7 @@ def differenceOfGassians(img):
   g1 =  cv2.GaussianBlur(img,(19,19),0)
   g2=  cv2.GaussianBlur(img,(21,21),0)
   result = g1 - g2
+  showImage('dog', result)
   _,img = cv2.threshold(result,128,255,cv2.THRESH_BINARY)
   return img
 
@@ -121,56 +123,6 @@ def remove(img, Min):
       img[output == i + 1] = 255
   return img
 
-def removeStubs(image):
-  kernel1 = np.array((
-    [0, 0, 0],
-    [0, 1, 0],
-    [0, 1, 0]), dtype="int")
-  kernel2 = np.array((
-    [0, 0, 0],
-    [0, 1, 0],
-    [1, 0, 0]), dtype="int")
-  kernel3 = np.array((
-    [0, 0, 0],
-    [1, 1, 0],
-    [0, 0, 0]), dtype="int")
-  kernel4 = np.array((
-    [1, 0, 0],
-    [0, 1, 0],
-    [0, 0, 0]), dtype="int")
-  kernel5 = np.array((
-    [0, 1, 0],
-    [0, 1, 0],
-    [0, 0, 0]), dtype="int")
-  kernel6 = np.array((
-    [0, 0, 1],
-    [0, 1, 0],
-    [0, 0, 0]), dtype="int")
-  kernel7 = np.array((
-    [0, 0, 0],
-    [0, 1, 1],
-    [0, 0, 0]), dtype="int")
-  kernel8 = np.array((
-    [0, 0, 0],
-    [0, 1, 0],
-    [0, 0, 1]), dtype="int")
-  
-  # output_image1 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel1)
-  # output_image2 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel2)
-  # output_image3 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel3)
-  # output_image4 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel4)
-  # output_image5 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel5)
-  # output_image6 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel6)
-  # output_image7 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel7)
-  # output_image8 = cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel8)
-
-  # output_image2 = cv2.bitwise_not(output_image1, output_image2)
-  output_image3 = cv2.bitwise_or(image, output_image3)
-  showImage("teste3", output_image3)
-  # output_image5 = cv2.bitwise_not(output_image4, output_image5)
-  # output_image7 = cv2.bitwise_not(output_image6, output_image7)
-  # output_image = cv2.bitwise_not(output_image7, output_image8)
-  return image
 
 def applyFilters(image):
   kernel9 = np.ones((3,3), np.uint8)
@@ -180,18 +132,19 @@ def applyFilters(image):
   # utils.showImage('image original', originalImage)
 
   filteredImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-  # showImage('escala de cinza', filteredImage)
+  showImage('escala de cinza', filteredImage)
   filteredImage = cv2.medianBlur(filteredImage, 5)
-  # showImage('filtro de media', filteredImage)
+  showImage('filtro de media', filteredImage)
   filteredImage = cv2.bilateralFilter(filteredImage, 5, 150, 150)
+  showImage('filtro bilateral', filteredImage)
   filteredImage = differenceOfGassians(filteredImage)
-  # showImage('filtro de Gaussian', filteredImage)
+  showImage('Thresshold', filteredImage)
   filteredImage = remove(filteredImage,90)
-  # showImage('remocao de ruidos', filteredImage)
+  showImage('remocao de ruidos', filteredImage)
   filteredImage = cv2.dilate(filteredImage, kernel9, iterations=1)
-  # showImage('dilatacao', filteredImage)
+  showImage('dilatacao', filteredImage)
   filteredImage=cv2.erode(filteredImage,kernel9,iterations=1)
-  # showImage('erosao', filteredImage)
+  showImage('erosao', filteredImage)
   # filteredImage=removeWings(filteredImage,kernel9)
 
   # xx,ww,hh,yy = cutImage(filteredImage) 
@@ -199,28 +152,47 @@ def applyFilters(image):
   # originalImage = originalImage[xx:yy, ww:hh]
 
   filteredImage = cv2.ximgproc.thinning(filteredImage,thinningType=cv2.ximgproc.THINNING_ZHANGSUEN)
-  # showImage('esqueletizacao', filteredImage)
+  showImage('esqueletizacao', filteredImage)
 
   filteredImage = remove(filteredImage,150)
-  # showImage('remocao de ruidos', filteredImage)
+  showImage('remocao de ruidos', filteredImage)
   # filteredImage = removeStubs(filteredImage)
   return filteredImage
 
+def saveLandmarks(image, filename):
+  path = filename.replace(config.DATASET_ORIGINAL, config.LANDMARKS_PATH)
+  cv2.imwrite(path, image)
+
+def saveNpys(landmarks, filename):
+  path = filename.replace(config.DATASET_ORIGINAL, config.NPY_PATH)
+  path = path.replace('.png', '')
+  np.save(path, landmarks)
+
 def main():
-    n = len(sys.argv)
+  n = len(sys.argv)
 
-    if n == 2:
-        filenames = [ sys.argv[1] ]
-    else:
-        filenames = getFilenames("./AT-wing-images", "png")
+  if n == 2:
+    filenames = [ sys.argv[1] ]
+  else:
+    filenames = getFilenames(config.DATASET_ORIGINAL, config.DATASET_IN_EXTENSION)
+  
+  images = loadImages(filenames)
+
+  h = []
+  w = []
+  for index in range(0, len(images)):
+    print('Processing ', filenames[index])
+    print(images[index].shape)
+    height, width, c = images[index].shape
+    h.append(height)
+    w.append(width)
     
-    images = loadImages(filenames)
+    filteredImage = applyFilters(images[index])
+    filteredImage, landmarks = locateLandmarks(filteredImage)
+    showImage('landmarks', filteredImage)
+    saveLandmarks(filteredImage, filenames[index])
+    saveNpys(landmarks, filenames[index])
 
-    for index in range(0, len(images)):
-        print('Processing ', filenames[index])
-        
-        filteredImage = applyFilters(images[index])
-        # filteredImage, landmarks = locateLandmarks(filteredImage)
-        showImage('teste', filteredImage)
-
+  # print("mix height: ", min(h), " max height: ", max(h))
+  # print("mix width: ", min(w), " max width: ", max(w))
 main()

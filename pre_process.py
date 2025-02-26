@@ -12,7 +12,7 @@ def main():
     if n == 2:
         filenames = [ sys.argv[1] ]
     else:
-        filenames = getFilenames(config.DATASET_PATH, config.DATASET_IN_EXTENSION)
+        filenames = getFilenames(config.DATASET_ORIGINAL, config.DATASET_IN_EXTENSION)
     
     images = loadImages(filenames)
 
@@ -21,11 +21,11 @@ def main():
         
         filteredImage, originalImage = applyFilters(images[index])
         filteredImage, landmarks = locateLandmarks(filteredImage)
-        # showImage('teste', filteredImage)
+        showImage('landmarks', filteredImage)
 
         saveImageOut(filteredImage, filenames[index], 'filtered')
         saveImageOut(originalImage, filenames[index], 'original')
-        saveLandmarks(landmarks, filenames[index])
+        # saveLandmarks(landmarks, filenames[index])
 
 main()
 

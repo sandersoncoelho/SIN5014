@@ -2,4 +2,6 @@ __pycache__/
 dataset*
 out*
 AT-wing-images/
+AT-dataset*
 at_out_test/
+annotation/

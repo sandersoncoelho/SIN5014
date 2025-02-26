@@ -35,6 +35,7 @@ def loadImages(filenames):
   return images
 
 def saveImageOut(image, filename, filenamePrefix):
-    path = filename.replace(config.DATASET_PATH, config.OUT_PATH + '/images/' + filenamePrefix)
+    path = filename.replace(config.DATASET_ORIGINAL, config.LANDMARKS_PATH + '/images/' + filenamePrefix)
     path = path.replace(config.DATASET_IN_EXTENSION, config.DATASET_OUT_EXTENSION)
+    print(path)
     cv2.imwrite(path, image)

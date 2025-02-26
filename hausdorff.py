@@ -1,19 +1,16 @@
-import itertools
-import math
 
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.core.umath_tests import inner1d
 from scipy.spatial import distance
 
 import config
-from landmarks import getLandmarksFromAnnotation, locateLandmarks
+from landmarks import getLandmarksFromAnnotation, mergeLandmarksClose
 from utils import getFilenames, showImage
 
-PROXIMITY_MEASURE = 22
-MIN_LANDMARKS_ACCEPTED = 8
-MERGE_MEASURE = 10
+LANDMARKS = 18
+PROXIMITY_MEASURE = 10
+
 
 def getModifiedHausdorffDistance(arrayA, arrayB):    
   a = distance.cdist(arrayA, arrayB, 'euclidean').min(axis = 0)
@@ -24,30 +21,11 @@ def getModifiedHausdorffDistance(arrayA, arrayB):
   
   return max(a, b)
 
-def mergeLandmarksClose(landmarksNpy):
-  result = []
-  pointsToBeRemoved = []
-
-  combinations = list(itertools.combinations(landmarksNpy, 2))
-
-  for pointA, pointB in combinations:
-    if math.dist(pointA, pointB) < MERGE_MEASURE:
-      mergedPoint = [int((pointA[0] + pointB[0])/2), int((pointA[1] + pointB[1]) / 2)]
-      result.append(mergedPoint)
-      pointsToBeRemoved.append(pointA)
-      pointsToBeRemoved.append(pointB)
-
-  for point in landmarksNpy:
-    if point not in pointsToBeRemoved:
-      result.append(point)
-
-  return result
-
 def isPointsClose(center, point, radius):
   return pow(point[0] - center[0], 2) + pow(point[1] - center[1], 2) < pow(radius, 2)
 
 def saveImageMerged(filenameNpy, landmarkNpyClose):
-  filename = filenameNpy.replace('/landmarks', '/images/filtered')
+  filename = filenameNpy.replace('/npy', '/original')
   filename = filename.replace('.npy', '.png')
 
   image = cv2.imread(filename)
@@ -56,8 +34,8 @@ def saveImageMerged(filenameNpy, landmarkNpyClose):
   for p in landmarkNpyClose:
     x = p[0]
     y = p[1]
-    image = cv2.circle(image, (x, y), 5, 100, -1)
-  filename = filename.replace('/filtered', '/merged')
+    image = cv2.circle(image, (x, y), 5, 255, -1)
+  filename = filename.replace('/original', '/mhd')
   cv2.imwrite(filename, image)
 
 def plotHausdorff(hausdorffDistances):
@@ -96,53 +74,54 @@ def plotExpectedsAndFoundout(expected, foundout):
   plt.tight_layout()
   plt.show()
 
+def calculateMetrics(landmarksAnn, landmarksNpy):
+  corrects = 0
+  for landmarkAnn in landmarksAnn:
+    for landmarkNpy in landmarksNpy:
+      if isPointsClose(landmarkAnn, landmarkNpy, PROXIMITY_MEASURE):
+        corrects += 1
+
+  corrects = LANDMARKS if corrects > LANDMARKS else corrects
+  errors = len(landmarksNpy) - corrects
+  return corrects / LANDMARKS, errors / len(landmarksNpy)
+
 def main():
   hausdorffDistances = []
-  expected = []
-  foundout = []
 
-  allLandmarksAnn = getLandmarksFromAnnotation('./annotation/dataset_out.json')
-  filenameNpys = getFilenames(config.OUT_PATH + '/landmarks', config.NPY_EXTENSION)
+  allLandmarksAnn = getLandmarksFromAnnotation('./annotation/AT_annotation.json')
+  filenameNpys = getFilenames(config.NPY_PATH, config.NPY_EXTENSION)
   filenameNpys.sort()
   allLandmarksNpy = []
+  allAccuracy = []
+  allErrors = []
+
   for filenameNpy in filenameNpys:
     allLandmarksNpy.append(np.load(filenameNpy, allow_pickle=True).tolist())
 
   for i in range(len(allLandmarksAnn)):
     landmarksAnn = allLandmarksAnn[i]
     landmarksNpy = allLandmarksNpy[i]
-    
-    landmarkAnnClose = []
-    landmarkNpyClose = []
 
-    for landmarkAnn in landmarksAnn:
-      for landmarkNpy in landmarksNpy:
-        if isPointsClose(landmarkAnn, landmarkNpy, PROXIMITY_MEASURE) and \
-          landmarkAnn not in landmarkAnnClose and \
-            landmarkNpy not in landmarkNpyClose:
-              landmarkAnnClose.append(landmarkAnn)
-              landmarkNpyClose.append(landmarkNpy)
+    mhd = getModifiedHausdorffDistance(landmarksAnn, landmarksNpy)
+    accuracy, errors = calculateMetrics(landmarksAnn, landmarksNpy)
 
-    if len(landmarkAnnClose) >= MIN_LANDMARKS_ACCEPTED:
-      expected.append(len(landmarksAnn))
-      foundout.append(len(landmarkAnnClose))
-      print('\n\nlandmarkAnnClose:\n', landmarkAnnClose)
-      print('landmarkNpyClose:\n', landmarkNpyClose)
-      print('distance modified hausdorff\n', getModifiedHausdorffDistance(landmarkAnnClose, landmarkNpyClose))
+    print('distance hausdorff modified: ', mhd)
+    hausdorffDistances.append(mhd)
+    allAccuracy.append(accuracy)
+    allErrors.append(errors)
 
-      hausdorffDistances.append(getModifiedHausdorffDistance(landmarkAnnClose, landmarkNpyClose))
-      saveImageMerged(filenameNpys[i], landmarkNpyClose)
+    saveImageMerged(filenameNpys[i], landmarksNpy)
 
+  print('allAccuracy: ', allAccuracy)
+  print('allErrors: ', allErrors)
   print('\n\nQuantidades de images disponíveis: ', len(allLandmarksAnn))
-  print('Quantidades de images aceitas para o cálculo de mdh: ', len(hausdorffDistances))
-  print('Limite mínino de landmarks aceito por imagem: ', MIN_LANDMARKS_ACCEPTED)
-  print('Taxa de aproveitamento das imagens: ', len(hausdorffDistances) / len(allLandmarksAnn))
-  print('Acurácia média: ', np.mean(foundout) / np.mean(expected))
-  print('MDH média:', np.mean(hausdorffDistances))
+  print('MHD média:', np.mean(hausdorffDistances))
+  print('Acurácia média: ', np.mean(allAccuracy))
+  print('Erro médio: ', np.mean(allErrors))
   plotHausdorff(hausdorffDistances)
-  plotExpectedsAndFoundout(expected, foundout)
+  # plotExpectedsAndFoundout(expected, foundout)
 
-# main()
+main()
 import json
 import os
 
@@ -187,8 +166,8 @@ def teste():
       image = cv2.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 255), -1)
       landmarksNpyResult.append(landmark)
 
-  print("MDH:", getModifiedHausdorffDistance(landmarksAnn, landmarksNpyResult))
+  print("MHD:", getModifiedHausdorffDistance(landmarksAnn, landmarksNpyResult))
 
   showImage('teste', image)
 
-teste()
+# teste()

@@ -120,7 +120,7 @@ def getLandmarksAnnotationDataset():
       # print("isSimilarPolygons: ", )
 
 def getAllLandmarksNpy():
-  filenameNpys = getFilenames(config.OUT_PATH + '/landmarks', config.NPY_EXTENSION)
+  filenameNpys = getFilenames(config.LANDMARKS_PATH + '/landmarks', config.NPY_EXTENSION)
   filenameNpys.sort()
   allLandmarksNpy = []
   print(filenameNpys[0])
