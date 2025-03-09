@@ -112,23 +112,23 @@ def applyFilters(image):
 
   filteredImage = diminuirImagem(image)
   originalImage = diminuirImagem(image)
-  utils.showImage('image original', originalImage)
+  # utils.showImage('image original', originalImage)
 
   filteredImage = cv2.cvtColor(filteredImage, cv2.COLOR_BGR2GRAY)
-  utils.showImage('escala de cinza', filteredImage)
+  # utils.showImage('escala de cinza', filteredImage)
   filteredImage = cv2.medianBlur(filteredImage, 5)
-  utils.showImage('filtro de media', filteredImage)
+  # utils.showImage('filtro de media', filteredImage)
   filteredImage = cv2.bilateralFilter(filteredImage, 5, 150, 150)
-  utils.showImage('filtro bilateral', filteredImage)
+  # utils.showImage('filtro bilateral', filteredImage)
   filteredImage = differenceOfGassians(filteredImage)
-  utils.showImage('filtro de Gaussian', filteredImage)
+  # utils.showImage('filtro de Gaussian', filteredImage)
   filteredImage = remove(filteredImage,400)
-  utils.showImage('remocao de ruidos', filteredImage)
+  # utils.showImage('remocao de ruidos', filteredImage)
   filteredImage = cv2.dilate(filteredImage, kernel9, iterations=1)
-  utils.showImage('dilatacao', filteredImage)
+  # utils.showImage('dilatacao', filteredImage)
   # filteredImage = remove(filteredImage,200)
   filteredImage=cv2.erode(filteredImage,kernel9,iterations=1)
-  utils.showImage('erosao', filteredImage)
+  # utils.showImage('erosao', filteredImage)
   filteredImage=removeWings(filteredImage,kernel9)
 
   # xx,ww,hh,yy = cutImage(filteredImage) 
@@ -137,6 +137,6 @@ def applyFilters(image):
   # utils.showImage('bounding box', filteredImage)
 
   filteredImage = cv2.ximgproc.thinning(filteredImage,thinningType=cv2.ximgproc.THINNING_ZHANGSUEN)
-  utils.showImage('esqueletizacao', filteredImage)
+  # utils.showImage('esqueletizacao', filteredImage)
   
   return filteredImage, originalImage

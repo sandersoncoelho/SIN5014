@@ -12,6 +12,32 @@ LANDMARKS = 18
 PROXIMITY_MEASURE = 10
 
 
+def euclidean_distance(p1, p2):
+    """Calcula a distância Euclidiana entre dois pontos."""
+    return np.linalg.norm(p1 - p2)
+
+def modified_hausdorff_distance(A, B):
+    """
+    Calcula a Distância Modificada de Hausdorff (MHD) entre dois conjuntos de pontos A e B.
+    
+    Parâmetros:
+    A, B - Arrays NumPy de forma (N, d) e (M, d), onde N e M são o número de pontos,
+           e d é a dimensionalidade (2D ou 3D).
+    
+    Retorna:
+    O valor escalar da distância modificada de Hausdorff entre A e B.
+    """
+    A, B = np.array(A), np.array(B)  # Garante que A e B são arrays NumPy
+    
+    # Calcula d(A, B): média das menores distâncias de cada ponto de A para B
+    d_A_B = np.mean([np.min([euclidean_distance(a, b) for b in B]) for a in A])
+    
+    # Calcula d(B, A): média das menores distâncias de cada ponto de B para A
+    d_B_A = np.mean([np.min([euclidean_distance(b, a) for a in A]) for b in B])
+    
+    # A MHD é o máximo entre essas duas distâncias médias
+    return max(d_A_B, d_B_A)
+
 def getModifiedHausdorffDistance(arrayA, arrayB):    
   a = distance.cdist(arrayA, arrayB, 'euclidean').min(axis = 0)
   a = np.mean(a)
@@ -88,8 +114,8 @@ def calculateMetrics(landmarksAnn, landmarksNpy):
 def main():
   hausdorffDistances = []
 
-  allLandmarksAnn = getLandmarksFromAnnotation('./annotation/AT_annotation.json')
-  filenameNpys = getFilenames(config.NPY_PATH, config.NPY_EXTENSION)
+  allLandmarksAnn = getLandmarksFromAnnotation('./annotation/AT_annotation_2.json')
+  filenameNpys = getFilenames(config.LANDMARKS_PATH, config.NPY_EXTENSION)
   filenameNpys.sort()
   allLandmarksNpy = []
   allAccuracy = []
@@ -110,7 +136,7 @@ def main():
     allAccuracy.append(accuracy)
     allErrors.append(errors)
 
-    saveImageMerged(filenameNpys[i], landmarksNpy)
+    # saveImageMerged(filenameNpys[i], landmarksNpy)
 
   print('allAccuracy: ', allAccuracy)
   print('allErrors: ', allErrors)

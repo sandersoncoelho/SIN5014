@@ -164,6 +164,7 @@ def getLandmarksFromAnnotation(annotationFile):
 
   allLandmarks = []
   for keyFilename in image_id_list:
+    # print(keyFilename[:-6])
     regions = image_metadata[keyFilename]['regions']
 
     instanceLandmarks = []
