@@ -120,10 +120,13 @@ def main():
   allLandmarksNpy = []
   allAccuracy = []
   allErrors = []
+  lowestMhd = (filenameNpys[0], 1000)
+  highestMhd = (filenameNpys[0], 0)
 
   for filenameNpy in filenameNpys:
     allLandmarksNpy.append(np.load(filenameNpy, allow_pickle=True).tolist())
 
+  print('Distance Hausdorff Modified: ')
   for i in range(len(allLandmarksAnn)):
     landmarksAnn = allLandmarksAnn[i]
     landmarksNpy = allLandmarksNpy[i]
@@ -131,20 +134,27 @@ def main():
     mhd = getModifiedHausdorffDistance(landmarksAnn, landmarksNpy)
     accuracy, errors = calculateMetrics(landmarksAnn, landmarksNpy)
 
-    print('distance hausdorff modified: ', mhd)
+    print(f'Image: {filenameNpys[i]}, mhd: {mhd}')
     hausdorffDistances.append(mhd)
     allAccuracy.append(accuracy)
     allErrors.append(errors)
 
+    if mhd < lowestMhd[1]:
+      lowestMhd = (filenameNpys[i], mhd)
+    elif mhd > highestMhd[1]:
+      highestMhd = (filenameNpys[i], mhd)
+
     # saveImageMerged(filenameNpys[i], landmarksNpy)
 
-  print('allAccuracy: ', allAccuracy)
-  print('allErrors: ', allErrors)
-  print('\n\nQuantidades de images disponíveis: ', len(allLandmarksAnn))
-  print('MHD média:', np.mean(hausdorffDistances))
-  print('Acurácia média: ', np.mean(allAccuracy))
-  print('Erro médio: ', np.mean(allErrors))
-  plotHausdorff(hausdorffDistances)
+  print('Lowest MHD:', lowestMhd)
+  print('Highest MHD:', highestMhd)
+  # print('allAccuracy: ', allAccuracy)
+  # print('allErrors: ', allErrors)
+  # print('\n\nQuantidades de images disponíveis: ', len(allLandmarksAnn))
+  # print('MHD média:', np.mean(hausdorffDistances))
+  # print('Acurácia média: ', np.mean(allAccuracy))
+  # print('Erro médio: ', np.mean(allErrors))
+  # plotHausdorff(hausdorffDistances)
   # plotExpectedsAndFoundout(expected, foundout)
 
 main()

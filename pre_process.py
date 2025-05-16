@@ -21,11 +21,11 @@ def main():
         
         filteredImage, originalImage = applyFilters(images[index])
         filteredImage, landmarks = locateLandmarks(filteredImage)
-        # showImage('landmarks', filteredImage)
+        showImage('landmarks', filteredImage)
 
-        saveImageOut(filteredImage, filenames[index], 'filtered')
-        saveImageOut(originalImage, filenames[index], 'original')
-        saveLandmarks(landmarks, filenames[index])
+        # saveImageOut(filteredImage, filenames[index], 'filtered')
+        # saveImageOut(originalImage, filenames[index], 'original')
+        # saveLandmarks(landmarks, filenames[index])
         # saveNpys(landmarks, filenames[index])
 
 main()

@@ -148,6 +148,11 @@ def locateLandmarks(image):
     x = p[0]
     y = p[1]
     image = cv2.circle(image, (x, y), 5, 255, -1)
+
+    half = 20
+    top_left = (x - half, y - half)
+    bottom_right = (x + half, y + half)
+    cv2.rectangle(image, top_left, bottom_right, 255, 1)
   
   return image, landmarks
 
